@@ -128,3 +128,17 @@ export interface AIRecommendation {
   text: string
   impact?: string
 }
+
+export interface ScoreBreakdown {
+  label: string
+  value: number
+}
+
+export interface PortfolioResult {
+  score: number
+  scoreBreakdown: ScoreBreakdown[]
+  enhancedDescriptions: Record<number, string>
+  interviewQuestions: string[]
+  suggestions: string[]
+  bioImproved: string
+}

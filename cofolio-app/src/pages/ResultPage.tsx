@@ -7,6 +7,7 @@ import { Icon } from '../components/common/Icon'
 import { Tag } from '../components/common/Tag'
 import { WindowDots, ScoreRing } from '../components/common/Card'
 import { ExportModal } from '../components/modals/ExportModal'
+import { FALLBACK_RESULT } from '../services/gemini'
 import { cn } from '../utils/cn'
 
 const FALLBACK_PROJECTS = [
@@ -16,18 +17,21 @@ const FALLBACK_PROJECTS = [
 
 const FALLBACK_PROFILE = { name: '김지호', role: 'Frontend Developer', location: '서울', bio: '협업 도구를 만드는 3년차 프론트엔드' }
 
-const AI_SUGGESTIONS = [
-  '프로젝트마다 결과 수치를 한 줄 더 추가해보세요.',
-  '배포 링크가 비어있는 프로젝트가 있습니다.',
-  '기술스택을 카테고리별로 분류해보세요.',
-]
+function scorePercentile(score: number): string {
+  if (score >= 90) return '상위 5% — 최고예요!'
+  if (score >= 80) return '상위 12% — 훌륭해요!'
+  if (score >= 70) return '상위 25% — 좋아요!'
+  if (score >= 60) return '상위 40% — 계속 발전 중!'
+  return '아직 완성 중 — 더 채워봐요!'
+}
 
 export default function ResultPage() {
-  const { state } = useBuilder()
+  const { state, result } = useBuilder()
   const navigate = useNavigate()
   const [exportOpen, setExportOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
+  const r = result ?? FALLBACK_RESULT
   const projects = state.projects?.length ? state.projects : FALLBACK_PROJECTS
   const allStack = Object.values(state.stack || {}).flat()
   const profile = state.profile?.name ? state.profile : FALLBACK_PROFILE
@@ -97,7 +101,9 @@ export default function ResultPage() {
                         <div className="text-[18px] font-semibold">{profile.name || '이름'}</div>
                         <Tag tone="violet">{profile.role || 'Developer'}</Tag>
                       </div>
-                      <div className="text-[12px] text-slate-400 mt-0.5">{[profile.location, profile.bio].filter(Boolean).join(' · ')}</div>
+                      <div className="text-[12px] text-slate-400 mt-0.5">
+                        {r.bioImproved || [profile.location, profile.bio].filter(Boolean).join(' · ')}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -107,7 +113,11 @@ export default function ResultPage() {
                 </div>
 
                 <div className="mt-5 grid grid-cols-3 gap-3">
-                  {([['Projects', projects.length, 'violet'], ['Tech Stacks', allStack.length || 12, 'indigo'], ['Score', '86', 'cyan']] as const).map(([l, v, c]) => (
+                  {([
+                    ['Projects', projects.length, 'violet'],
+                    ['Tech Stacks', allStack.length || 12, 'indigo'],
+                    ['Score', r.score, 'cyan'],
+                  ] as const).map(([l, v, c]) => (
                     <div key={l} className="rounded-xl border border-white/8 bg-white/[0.02] px-3 py-3">
                       <div className="text-[10px] uppercase tracking-[0.16em] text-slate-500">{l}</div>
                       <div className={cn('mt-1 text-2xl font-bold',
@@ -127,7 +137,9 @@ export default function ResultPage() {
                           <div className="text-[13px] font-semibold">{p.title || `Project ${i + 1}`}</div>
                           {p.role && <Tag tone="cyan">{p.role}</Tag>}
                         </div>
-                        <div className="mt-1 text-[12px] text-slate-400 leading-relaxed line-clamp-2">{p.desc || '프로젝트 설명'}</div>
+                        <div className="mt-1 text-[12px] text-slate-400 leading-relaxed line-clamp-2">
+                          {r.enhancedDescriptions[p.id] || p.desc || '프로젝트 설명'}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -146,13 +158,27 @@ export default function ResultPage() {
               </div>
             </div>
 
-            {/* sidebar — score + suggestions */}
+            {/* sidebar — score + suggestions + interview questions */}
             <div className="space-y-5">
               <div className="reveal in glass rounded-2xl p-5 text-center">
                 <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Portfolio Score</div>
-                <div className="mt-3 grid place-items-center"><ScoreRing value={86} size={160} /></div>
-                <div className="mt-3 text-[12px] text-emerald-300">상위 12% — 훌륭해요!</div>
+                <div className="mt-3 grid place-items-center"><ScoreRing value={r.score} size={160} /></div>
+                <div className="mt-3 text-[12px] text-emerald-300">{scorePercentile(r.score)}</div>
+                {r.scoreBreakdown.length > 0 && (
+                  <div className="mt-4 space-y-2 text-left">
+                    {r.scoreBreakdown.map((item) => (
+                      <div key={item.label} className="flex items-center gap-2">
+                        <div className="text-[11px] text-slate-400 w-16 shrink-0">{item.label}</div>
+                        <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                          <div className="h-full rounded-full bg-gradient-to-r from-violet-400 to-cyan-400" style={{ width: `${item.value}%` }} />
+                        </div>
+                        <div className="text-[11px] font-mono text-slate-300 w-7 text-right">{item.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+
               <div className="reveal in glass rounded-2xl p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="grid h-7 w-7 place-items-center rounded-lg bg-violet-500/15 text-violet-200 border border-violet-400/20">
@@ -161,11 +187,31 @@ export default function ResultPage() {
                   <div className="text-[13px] font-semibold">AI 개선 제안</div>
                 </div>
                 <div className="space-y-2 text-[12.5px]">
-                  {AI_SUGGESTIONS.map((s, i) => (
+                  {r.suggestions.map((s, i) => (
                     <div key={i} className="rounded-xl border border-white/8 bg-white/[0.02] p-3 text-slate-300 leading-relaxed">{s}</div>
                   ))}
                 </div>
               </div>
+
+              {r.interviewQuestions.length > 0 && (
+                <div className="reveal in glass rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="grid h-7 w-7 place-items-center rounded-lg bg-cyan-500/15 text-cyan-200 border border-cyan-400/20">
+                      <Icon name="sparkles" size={13} />
+                    </span>
+                    <div className="text-[13px] font-semibold">예상 면접 질문</div>
+                  </div>
+                  <div className="space-y-2">
+                    {r.interviewQuestions.map((q, i) => (
+                      <div key={i} className="flex items-start gap-2.5 text-[12px] text-slate-300 leading-relaxed">
+                        <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-cyan-500/15 text-cyan-300 font-mono text-[10px]">{i + 1}</span>
+                        {q}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="reveal in flex flex-col gap-2">
                 <PrimaryBtn size="lg" onClick={() => navigate('/dashboard')}><Icon name="rocket" size={14} /> 공개하고 대시보드로</PrimaryBtn>
                 <GhostBtn onClick={() => navigate('/builder')}><Icon name="wand" size={14} /> 다시 수정하기</GhostBtn>

@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import type { BuilderState, TemplateType } from '../types'
+import type { BuilderState, PortfolioResult, TemplateType } from '../types'
 
 const STORAGE_KEY = 'cofolio.builder.v1'
+const RESULT_KEY = 'cofolio.result.v1'
 
 export const DEFAULT_BUILDER: BuilderState = {
   step: 0,
@@ -28,20 +29,34 @@ export function saveBuilder(s: BuilderState) {
 
 interface BuilderContextValue {
   state: BuilderState
+  result: PortfolioResult | null
   update: (patch: Partial<BuilderState> | ((s: BuilderState) => BuilderState)) => void
+  setResult: (r: PortfolioResult) => void
   reset: () => void
   fillExample: () => void
 }
 
 const BuilderCtx = createContext<BuilderContextValue>({
   state: DEFAULT_BUILDER,
+  result: null,
   update: () => {},
+  setResult: () => {},
   reset: () => {},
   fillExample: () => {},
 })
 
+function loadResult(): PortfolioResult | null {
+  try {
+    const raw = localStorage.getItem(RESULT_KEY)
+    return raw ? (JSON.parse(raw) as PortfolioResult) : null
+  } catch {
+    return null
+  }
+}
+
 export function BuilderProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<BuilderState>(loadBuilder)
+  const [result, setResultState] = useState<PortfolioResult | null>(loadResult)
 
   useEffect(() => { saveBuilder(state) }, [state])
 
@@ -51,6 +66,11 @@ export function BuilderProvider({ children }: { children: React.ReactNode }) {
     },
     []
   )
+
+  const setResult = useCallback((r: PortfolioResult) => {
+    setResultState(r)
+    try { localStorage.setItem(RESULT_KEY, JSON.stringify(r)) } catch {}
+  }, [])
 
   const reset = useCallback(() => setState(DEFAULT_BUILDER), [])
 
@@ -78,7 +98,7 @@ export function BuilderProvider({ children }: { children: React.ReactNode }) {
   }), [])
 
   return (
-    <BuilderCtx.Provider value={{ state, update, reset, fillExample }}>
+    <BuilderCtx.Provider value={{ state, result, update, setResult, reset, fillExample }}>
       {children}
     </BuilderCtx.Provider>
   )

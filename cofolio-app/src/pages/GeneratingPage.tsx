@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '../utils/cn'
 import { Icon } from '../components/common/Icon'
+import { useBuilder } from '../context/BuilderContext'
+import { analyzePortfolio } from '../services/gemini'
 
 const STEPS_AI = [
   { l: '프로젝트 정보 분석 중', d: '입력한 데이터에서 핵심 키워드 추출' },
@@ -16,25 +18,45 @@ export default function GeneratingPage() {
   const [progress, setProgress] = useState(0)
   const [stepIdx, setStepIdx] = useState(0)
   const navigate = useNavigate()
+  const { state, setResult } = useBuilder()
   const total = STEPS_AI.length
+  const navigatedRef = useRef(false)
 
   useEffect(() => {
     const totalMs = 4500
     const t0 = performance.now()
     let raf: number
-    const tick = (now: number) => {
-      const elapsed = Math.min(1, (now - t0) / totalMs)
-      setProgress(elapsed)
-      setStepIdx(Math.min(total - 1, Math.floor(elapsed * total)))
-      if (elapsed < 1) {
-        raf = requestAnimationFrame(tick)
-      } else {
+
+    // 애니메이션 promise
+    const animPromise = new Promise<void>((resolve) => {
+      const tick = (now: number) => {
+        const elapsed = Math.min(1, (now - t0) / totalMs)
+        setProgress(elapsed)
+        setStepIdx(Math.min(total - 1, Math.floor(elapsed * total)))
+        if (elapsed < 1) {
+          raf = requestAnimationFrame(tick)
+        } else {
+          resolve()
+        }
+      }
+      raf = requestAnimationFrame(tick)
+    })
+
+    // API promise (실패해도 fallback 처리)
+    const apiPromise = analyzePortfolio(state)
+      .then((result) => setResult(result))
+      .catch(() => {})
+
+    // 둘 다 완료되면 이동
+    Promise.all([animPromise, apiPromise]).then(() => {
+      if (!navigatedRef.current) {
+        navigatedRef.current = true
         setTimeout(() => navigate('/result'), 400)
       }
-    }
-    raf = requestAnimationFrame(tick)
+    })
+
     return () => cancelAnimationFrame(raf)
-  }, [navigate, total])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const pct = Math.round(progress * 100)
 
@@ -52,7 +74,7 @@ export default function GeneratingPage() {
           <h1 className="mt-5 text-[32px] sm:text-[40px] font-bold tracking-tight">
             포트폴리오를 <span className="text-grad">만들고 있어요</span>
           </h1>
-          <p className="mt-3 text-[13.5px] text-slate-400">잠시만 기다려 주세요. 평균 5초 정도 걸려요.</p>
+          <p className="mt-3 text-[13.5px] text-slate-400">잠시만 기다려 주세요. 평균 5~10초 정도 걸려요.</p>
         </div>
 
         <div className="mt-8 glass-strong rounded-2xl p-6 ring-grad">
@@ -103,14 +125,14 @@ export default function GeneratingPage() {
           </div>
         </div>
 
-        {/* Fake terminal */}
+        {/* Terminal */}
         <div className="mt-5 rounded-xl border border-white/8 bg-ink-950/80 p-3 font-mono text-[11.5px] leading-relaxed text-slate-400 nosb max-h-[120px] overflow-hidden">
           <div><span className="text-violet-300">→</span> cofolio analyze --input ./portfolio.json</div>
           <div><span className="text-cyan-300">✓</span> parsed {Math.floor(progress * 8) + 2} sections</div>
           <div><span className="text-cyan-300">✓</span> classified tech stack into 5 groups</div>
-          {progress > 0.5 && <div><span className="text-cyan-300">✓</span> rewrote 12 sentences with --tone professional</div>}
+          {progress > 0.5 && <div><span className="text-cyan-300">✓</span> rewrote sentences with --tone professional</div>}
           {progress > 0.75 && <div><span className="text-cyan-300">✓</span> generated 8 interview questions</div>}
-          {progress >= 0.99 && <div><span className="text-emerald-300">✓</span> portfolio score: 86/100</div>}
+          {progress >= 0.99 && <div><span className="text-emerald-300">✓</span> analysis complete — awaiting score…</div>}
         </div>
       </div>
     </div>

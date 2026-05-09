@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useBuilder } from '../context/BuilderContext'
+import { FALLBACK_RESULT } from '../services/gemini'
 import { Section } from '../components/common/Section'
 import { PrimaryBtn, GhostBtn } from '../components/common/Button'
 import { Icon } from '../components/common/Icon'
@@ -17,16 +18,17 @@ const FALLBACK_PROJECTS = [
 const KPI_WEEKLY_CHANGE = [8, 12, 6, 22]
 
 export default function DashboardPage() {
-  const { state } = useBuilder()
   const navigate = useNavigate()
+  const { state, result } = useBuilder()
   const [exportOpen, setExportOpen] = useState(false)
 
+  const r = result ?? FALLBACK_RESULT
   const projectsCount = state.projects?.length || 4
   const stackCount = Object.values(state.stack || {}).flat().length || 12
   const profileSlug = (state.profile?.name || 'user').toLowerCase().replace(/\s+/g, '-')
 
   const kpis = [
-    { l: 'Portfolio Score', v: '86', c: 'violet', icon: 'sparkles' as const },
+    { l: 'Portfolio Score', v: String(r.score), c: 'violet', icon: 'sparkles' as const },
     { l: 'Projects', v: String(projectsCount), c: 'indigo', icon: 'folder' as const },
     { l: 'Tech Stacks', v: String(stackCount), c: 'cyan', icon: 'layers' as const },
     { l: '방문자 (7일)', v: '2,432', c: 'emerald', icon: 'eye' as const },
