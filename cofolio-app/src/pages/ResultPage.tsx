@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useBuilder } from '../context/BuilderContext'
 import { Section, Eyebrow } from '../components/common/Section'
 import { PrimaryBtn, GhostBtn } from '../components/common/Button'
@@ -50,10 +50,10 @@ export default function ResultPage() {
 
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-ink-950/70 border-b border-white/5">
         <div className="mx-auto flex h-14 w-full max-w-[1180px] items-center justify-between px-5">
-          <a href="/" className="flex items-center gap-2.5">
+          <Link to="/" className="flex items-center gap-2.5">
             <div className="grid h-8 w-8 place-items-center rounded-lg glass ring-grad"><Icon name="logo-c" size={18} /></div>
             <span className="text-[15px] font-bold">Cofolio</span>
-          </a>
+          </Link>
           <div className="flex items-center gap-2">
             <GhostBtn size="sm" onClick={copy}><Icon name="globe" size={13} /> {copied ? '복사됨!' : '공개 링크'}</GhostBtn>
             <GhostBtn size="sm" onClick={() => navigate('/builder')}><Icon name="wand" size={13} /> 수정하기</GhostBtn>
@@ -93,8 +93,10 @@ export default function ResultPage() {
               <div className="p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="grid h-14 w-14 rounded-2xl bg-gradient-to-br from-violet-500 via-indigo-500 to-cyan-500 place-items-center text-white font-bold text-lg ring-grad">
-                      {(profile.name || 'U').slice(0, 2)}
+                    <div className="grid h-14 w-14 rounded-2xl bg-gradient-to-br from-violet-500 via-indigo-500 to-cyan-500 place-items-center text-white ring-grad">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                      </svg>
                     </div>
                     <div>
                       <div className="flex items-center gap-2">

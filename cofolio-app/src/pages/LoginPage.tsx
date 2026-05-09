@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Eyebrow } from '../components/common/Section'
 import { PrimaryBtn } from '../components/common/Button'
 import { Icon } from '../components/common/Icon'
@@ -8,10 +8,20 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault()
+    setError(null)
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('올바른 이메일 주소를 입력해주세요.')
+      return
+    }
+    if (password.length < 6) {
+      setError('비밀번호는 6자 이상이어야 합니다.')
+      return
+    }
     setLoading(true)
     setTimeout(() => { setLoading(false); navigate('/builder') }, 700)
   }
@@ -25,10 +35,10 @@ export default function LoginPage() {
         style={{ maskImage: 'radial-gradient(60% 50% at 50% 30%, black, transparent)', WebkitMaskImage: 'radial-gradient(60% 50% at 50% 30%, black, transparent)' }}
       />
 
-      <a href="/" className="absolute top-6 left-6 flex items-center gap-2.5 text-slate-300 hover:text-white">
+      <Link to="/" className="absolute top-6 left-6 flex items-center gap-2.5 text-slate-300 hover:text-white">
         <div className="grid h-9 w-9 place-items-center rounded-xl glass ring-grad"><Icon name="logo-c" size={22} /></div>
         <span className="text-[16px] font-bold tracking-tight">Cofolio</span>
-      </a>
+      </Link>
 
       <div className="w-full max-w-[440px] reveal in">
         <div className="text-center">
@@ -98,6 +108,11 @@ export default function LoginPage() {
               </label>
               <a className="text-violet-300 hover:text-violet-200 cursor-pointer">비밀번호 찾기</a>
             </div>
+            {error && (
+              <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-3.5 py-2.5 text-[12.5px] text-red-300">
+                {error}
+              </div>
+            )}
             <PrimaryBtn type="submit" size="lg" className="w-full">
               {loading
                 ? <><span className="h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" /> 로그인 중…</>

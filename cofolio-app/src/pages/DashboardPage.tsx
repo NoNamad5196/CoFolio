@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useBuilder } from '../context/BuilderContext'
 import { FALLBACK_RESULT } from '../services/gemini'
 import { Section } from '../components/common/Section'
@@ -35,9 +35,9 @@ export default function DashboardPage() {
   ]
 
   const nextSteps = [
-    { l: '포트폴리오 링크 공유하기', a: '링크 복사', action: () => setExportOpen(true) },
+    { l: '포트폴리오 링크 공유하기', a: '링크 복사', action: () => { navigator.clipboard?.writeText(`https://cofolio.app/p/${profileSlug}`).catch(() => {}) } },
     { l: 'README로 내보내기', a: '내보내기', action: () => setExportOpen(true) },
-    { l: '면접 질문 8개 검토', a: '보기', action: null as (() => void) | null },
+    { l: '면접 질문 8개 검토', a: '보기', action: () => navigate('/result') },
     { l: '커스텀 도메인 연결', a: 'Pro 업그레이드', action: null as (() => void) | null },
   ]
 
@@ -47,10 +47,10 @@ export default function DashboardPage() {
 
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-ink-950/70 border-b border-white/5">
         <div className="mx-auto flex h-14 w-full max-w-[1240px] items-center justify-between px-5">
-          <a href="/" className="flex items-center gap-2.5">
+          <Link to="/" className="flex items-center gap-2.5">
             <div className="grid h-8 w-8 place-items-center rounded-lg glass ring-grad"><Icon name="logo-c" size={18} /></div>
             <span className="text-[15px] font-bold">Cofolio</span>
-          </a>
+          </Link>
           <div className="flex items-center gap-2">
             <GhostBtn size="sm" onClick={() => navigate('/result')}><Icon name="eye" size={13} /> 미리보기</GhostBtn>
             <GhostBtn size="sm" onClick={() => setExportOpen(true)}><Icon name="download" size={13} /> 내보내기</GhostBtn>

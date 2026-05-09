@@ -12,7 +12,7 @@ export const DEFAULT_BUILDER: BuilderState = {
 export const EXAMPLE_BUILDER: BuilderState = {
   step: 3,
   profile: {
-    name: '김지호',
+    name: '김근호',
     role: 'Frontend Developer',
     location: '서울',
     bio: '사용자 경험을 코드로 다듬는 3년차 프론트엔드',

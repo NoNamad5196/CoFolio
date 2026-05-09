@@ -76,7 +76,7 @@ export function BuilderProvider({ children }: { children: React.ReactNode }) {
 
   const fillExample = useCallback(() => setState({
     step: 3,
-    profile: { name: '김지호', role: 'Frontend Developer', location: '서울', bio: '사용자 경험을 코드로 다듬는 3년차 프론트엔드' },
+    profile: { name: '김근호', role: 'Frontend Developer', location: '서울', bio: '사용자 경험을 코드로 다듬는 3년차 프론트엔드' },
     projects: [
       { id: 1, title: 'Notewave', desc: '실시간 협업 노트 — OT 알고리즘으로 충돌 해결', role: 'Frontend Lead', github: 'github.com/u/notewave', deploy: 'notewave.app' },
       { id: 2, title: 'Mealy', desc: '벡터 검색 기반 AI 식단 추천', role: 'Full-stack', github: 'github.com/u/mealy', deploy: 'mealy.app' },

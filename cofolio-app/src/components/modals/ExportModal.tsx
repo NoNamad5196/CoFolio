@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import type { ReactNode } from 'react'
 import { cn } from '../../utils/cn'
 import { PrimaryBtn } from '../common/Button'
 import { Tag } from '../common/Tag'
@@ -10,7 +11,7 @@ interface Props {
   portfolioName?: string
 }
 
-const FORMAT_ICONS: Record<string, React.ReactNode> = {
+const FORMAT_ICONS: Record<string, ReactNode> = {
   html: (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="m9 9-3 3 3 3M15 9l3 3-3 3M14 7l-4 10" />
