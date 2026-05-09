@@ -1,6 +1,18 @@
 import { GoogleGenAI } from '@google/genai'
 import type { BuilderState, PortfolioResult } from '../types'
 
+// ── Model ─────────────────────────────────────────────────────────────────────
+const MODEL = 'gemini-2.0-flash-lite'
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+export const hasApiKey = () => !!import.meta.env.VITE_GEMINI_API_KEY
+
+function getClient() {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string
+  return new GoogleGenAI({ apiKey })
+}
+
+// ── Fallback ──────────────────────────────────────────────────────────────────
 export const FALLBACK_RESULT: PortfolioResult = {
   score: 72,
   scoreBreakdown: [
@@ -29,6 +41,7 @@ export const FALLBACK_RESULT: PortfolioResult = {
   bioImproved: '',
 }
 
+// ── Portfolio analysis ────────────────────────────────────────────────────────
 function buildPrompt(state: BuilderState): string {
   const projectList = state.projects.map((p, i) =>
     `프로젝트 ${i + 1} (id: ${p.id}): 제목="${p.title}", 역할="${p.role}", 설명="${p.desc}", GitHub="${p.github}", 배포="${p.deploy}"`
@@ -83,13 +96,12 @@ JSON 외 다른 텍스트 없이 순수 JSON만 응답하세요.`
 }
 
 export async function analyzePortfolio(state: BuilderState): Promise<PortfolioResult> {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY
-  if (!apiKey) return FALLBACK_RESULT
+  if (!hasApiKey()) return FALLBACK_RESULT
 
-  const ai = new GoogleGenAI({ apiKey })
+  const ai = getClient()
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.0-flash',
+    model: MODEL,
     contents: buildPrompt(state),
     config: { responseMimeType: 'application/json' },
   })
@@ -105,4 +117,63 @@ export async function analyzePortfolio(state: BuilderState): Promise<PortfolioRe
     suggestions: parsed.suggestions?.length ? parsed.suggestions : FALLBACK_RESULT.suggestions,
     bioImproved: parsed.bioImproved ?? '',
   }
+}
+
+// ── Per-field AI improvement ──────────────────────────────────────────────────
+export type ImproveType = 'bio' | 'project_desc' | 'intro' | 'career' | 'goals'
+
+interface ImproveCtx {
+  name?: string
+  role?: string
+  projectTitle?: string
+  projectRole?: string
+}
+
+function buildImprovePrompt(type: ImproveType, value: string, ctx: ImproveCtx): string {
+  const cur = value.trim() || '(비어있음)'
+
+  switch (type) {
+    case 'bio':
+      return `개발자 한 줄 소개를 50자 이내 전문적이고 자연스러운 한국어로 개선해주세요.
+이름: ${ctx.name || '미입력'} / 직무: ${ctx.role || '미입력'}
+현재 소개: ${cur}
+개선된 한 줄 소개 텍스트만 출력하세요. 따옴표·설명 없이.`
+
+    case 'project_desc':
+      return `프로젝트 설명을 "문제 → 해결 → 결과" 구조로 2~3문장 한국어로 개선해주세요.
+프로젝트: ${ctx.projectTitle || '미입력'} / 역할: ${ctx.projectRole || '미입력'}
+현재 설명: ${cur}
+개선된 설명 텍스트만 출력하세요. 따옴표·설명 없이.`
+
+    case 'intro':
+      return `개발자 자기소개를 전문적이고 자연스러운 한국어로 3~4문장으로 개선해주세요.
+현재 내용: ${cur}
+개선된 자기소개 텍스트만 출력하세요. 따옴표·설명 없이.`
+
+    case 'career':
+      return `개발자 경력·활동 소개를 간결하고 임팩트 있는 한국어로 2~3문장으로 개선해주세요.
+현재 내용: ${cur}
+개선된 텍스트만 출력하세요. 따옴표·설명 없이.`
+
+    case 'goals':
+      return `개발자 목표·관심사를 열정과 방향성이 드러나는 한국어로 2문장으로 개선해주세요.
+현재 내용: ${cur}
+개선된 텍스트만 출력하세요. 따옴표·설명 없이.`
+  }
+}
+
+export async function improveField(
+  type: ImproveType,
+  value: string,
+  ctx: ImproveCtx = {},
+): Promise<string> {
+  if (!hasApiKey()) return value
+
+  const ai = getClient()
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents: buildImprovePrompt(type, value, ctx),
+  })
+
+  return response.text?.trim() || value
 }

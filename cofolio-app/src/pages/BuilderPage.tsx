@@ -9,6 +9,7 @@ import { Tag } from '../components/common/Tag'
 import { Icon } from '../components/common/Icon'
 import { WindowDots } from '../components/common/Card'
 import type { TemplateType, BuilderState } from '../types'
+import { improveField, hasApiKey } from '../services/gemini'
 
 // ── StepBar ──────────────────────────────────────────────────────────────────
 const STEPS = ['프로필', '프로젝트', '기술스택', '마무리']
@@ -79,10 +80,42 @@ function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   )
 }
 
+// ── AI assist button ───────────────────────────────────────────────────────────
+function AIBtn({ loading, onClick }: { loading: boolean; onClick: () => void }) {
+  if (!hasApiKey()) return null
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={loading}
+      className="inline-flex items-center gap-1 text-[11px] text-violet-300 hover:text-violet-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {loading
+        ? <span className="h-2.5 w-2.5 rounded-full border border-violet-300/40 border-t-violet-300 animate-spin inline-block" />
+        : <Icon name="sparkles" size={10} />}
+      <span>{loading ? 'AI 개선 중…' : 'AI 개선'}</span>
+    </button>
+  )
+}
+
 // ── Step 0: Profile ───────────────────────────────────────────────────────────
 interface StepProfileProps { state: BuilderState; update: (p: Partial<BuilderState>) => void; errors: Record<string, string> }
 
 function StepProfile({ state, update, errors }: StepProfileProps) {
+  const [bioLoading, setBioLoading] = useState(false)
+
+  const handleImproveBio = async () => {
+    setBioLoading(true)
+    try {
+      const improved = await improveField('bio', state.profile.bio, {
+        name: state.profile.name,
+        role: state.profile.role,
+      })
+      update({ profile: { ...state.profile, bio: improved } })
+    } catch { /* silent */ }
+    setBioLoading(false)
+  }
+
   return (
     <div className="space-y-4">
       <div>
@@ -91,7 +124,7 @@ function StepProfile({ state, update, errors }: StepProfileProps) {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="이름" error={errors.name}>
-          <Input value={state.profile.name} onChange={(e) => update({ profile: { ...state.profile, name: e.target.value } })} placeholder="예: 김지호" />
+          <Input value={state.profile.name} onChange={(e) => update({ profile: { ...state.profile, name: e.target.value } })} placeholder="예: 김근호" />
         </Field>
         <Field label="역할 / 직무" error={errors.role}>
           <Input value={state.profile.role} onChange={(e) => update({ profile: { ...state.profile, role: e.target.value } })} placeholder="예: Frontend Developer" />
@@ -99,9 +132,20 @@ function StepProfile({ state, update, errors }: StepProfileProps) {
         <Field label="지역">
           <Input value={state.profile.location} onChange={(e) => update({ profile: { ...state.profile, location: e.target.value } })} placeholder="예: 서울" />
         </Field>
-        <Field label="한 줄 소개" hint="50자 이내 권장">
-          <Input value={state.profile.bio} onChange={(e) => update({ profile: { ...state.profile, bio: e.target.value } })} placeholder="예: 협업 도구를 만드는 3년차 프론트엔드" />
-        </Field>
+        <div>
+          <Field label="한 줄 소개" hint="50자 이내 권장">
+            <Input
+              value={state.profile.bio}
+              onChange={(e) => update({ profile: { ...state.profile, bio: e.target.value } })}
+              placeholder="예: 협업 도구를 만드는 3년차 프론트엔드"
+              disabled={bioLoading}
+              className={bioLoading ? 'opacity-60' : ''}
+            />
+          </Field>
+          <div className="mt-1 flex justify-end">
+            <AIBtn loading={bioLoading} onClick={handleImproveBio} />
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -111,9 +155,23 @@ function StepProfile({ state, update, errors }: StepProfileProps) {
 interface StepProjectsProps { state: BuilderState; update: (p: Partial<BuilderState>) => void; errors: Record<string, string> }
 
 function StepProjects({ state, update }: StepProjectsProps) {
+  const [loadingDescId, setLoadingDescId] = useState<number | null>(null)
+
   const addProject = () => update({ projects: [...state.projects, { id: Date.now(), title: '', desc: '', role: '', github: '', deploy: '' }] })
   const removeProject = (id: number) => update({ projects: state.projects.filter((p) => p.id !== id) })
   const updateProject = (id: number, patch: object) => update({ projects: state.projects.map((p) => p.id === id ? { ...p, ...patch } : p) })
+
+  const handleImproveDesc = async (p: { id: number; title: string; role: string; desc: string }) => {
+    setLoadingDescId(p.id)
+    try {
+      const improved = await improveField('project_desc', p.desc, {
+        projectTitle: p.title,
+        projectRole: p.role,
+      })
+      updateProject(p.id, { desc: improved })
+    } catch { /* silent */ }
+    setLoadingDescId(null)
+  }
 
   return (
     <div className="space-y-4">
@@ -153,8 +211,17 @@ function StepProjects({ state, update }: StepProjectsProps) {
               <Field label="담당 역할"><Input value={p.role} onChange={(e) => updateProject(p.id, { role: e.target.value })} placeholder="예: Frontend Lead" /></Field>
               <div className="sm:col-span-2">
                 <Field label="설명" hint="문제 → 해결 과정 → 결과 순으로 적으면 좋아요">
-                  <Textarea value={p.desc} onChange={(e) => updateProject(p.id, { desc: e.target.value })} placeholder="이 프로젝트가 해결하려던 문제와 본인이 한 일을 적어주세요" />
+                  <Textarea
+                    value={p.desc}
+                    onChange={(e) => updateProject(p.id, { desc: e.target.value })}
+                    placeholder="이 프로젝트가 해결하려던 문제와 본인이 한 일을 적어주세요"
+                    disabled={loadingDescId === p.id}
+                    className={loadingDescId === p.id ? 'opacity-60' : ''}
+                  />
                 </Field>
+                <div className="mt-1 flex justify-end">
+                  <AIBtn loading={loadingDescId === p.id} onClick={() => handleImproveDesc(p)} />
+                </div>
               </div>
               <Field label="GitHub 링크"><Input value={p.github} onChange={(e) => updateProject(p.id, { github: e.target.value })} placeholder="github.com/..." /></Field>
               <Field label="배포 링크"><Input value={p.deploy} onChange={(e) => updateProject(p.id, { deploy: e.target.value })} placeholder="https://..." /></Field>
@@ -275,8 +342,21 @@ interface StepFinalizeProps { state: BuilderState; update: (p: Partial<BuilderSt
 
 function StepFinalize({ state, update }: StepFinalizeProps) {
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [introLoading, setIntroLoading] = useState(false)
+  const [careerLoading, setCareerLoading] = useState(false)
+  const [goalsLoading, setGoalsLoading] = useState(false)
   const navigate = useNavigate()
   const allStack = Object.values(state.stack).flat()
+
+  const handleImproveAbout = async (field: 'intro' | 'career' | 'goals') => {
+    const setLoading = field === 'intro' ? setIntroLoading : field === 'career' ? setCareerLoading : setGoalsLoading
+    setLoading(true)
+    try {
+      const improved = await improveField(field, state.about[field])
+      update({ about: { ...state.about, [field]: improved } })
+    } catch { /* silent */ }
+    setLoading(false)
+  }
 
   return (
     <div className="space-y-5">
@@ -285,15 +365,48 @@ function StepFinalize({ state, update }: StepFinalizeProps) {
         <div className="mt-1 text-[13px] text-slate-400">AI가 문장을 더 자연스럽게 다듬어 드립니다.</div>
       </div>
       <div className="grid grid-cols-1 gap-3">
-        <Field label="자기소개" hint="AI가 다듬어 줍니다">
-          <Textarea value={state.about.intro} onChange={(e) => update({ about: { ...state.about, intro: e.target.value } })} placeholder="어떤 일을 좋아하고, 무엇에 집중하는지 적어주세요" />
-        </Field>
-        <Field label="경력 / 활동">
-          <Textarea value={state.about.career} onChange={(e) => update({ about: { ...state.about, career: e.target.value } })} placeholder="회사, 동아리, 학회, 활동 등을 자유롭게 적어주세요" />
-        </Field>
-        <Field label="목표 / 관심사">
-          <Textarea value={state.about.goals} onChange={(e) => update({ about: { ...state.about, goals: e.target.value } })} placeholder="앞으로 어떤 일을 하고 싶은지 적어주세요" />
-        </Field>
+        <div>
+          <Field label="자기소개" hint="AI가 다듬어 줍니다">
+            <Textarea
+              value={state.about.intro}
+              onChange={(e) => update({ about: { ...state.about, intro: e.target.value } })}
+              placeholder="어떤 일을 좋아하고, 무엇에 집중하는지 적어주세요"
+              disabled={introLoading}
+              className={introLoading ? 'opacity-60' : ''}
+            />
+          </Field>
+          <div className="mt-1 flex justify-end">
+            <AIBtn loading={introLoading} onClick={() => handleImproveAbout('intro')} />
+          </div>
+        </div>
+        <div>
+          <Field label="경력 / 활동">
+            <Textarea
+              value={state.about.career}
+              onChange={(e) => update({ about: { ...state.about, career: e.target.value } })}
+              placeholder="회사, 동아리, 학회, 활동 등을 자유롭게 적어주세요"
+              disabled={careerLoading}
+              className={careerLoading ? 'opacity-60' : ''}
+            />
+          </Field>
+          <div className="mt-1 flex justify-end">
+            <AIBtn loading={careerLoading} onClick={() => handleImproveAbout('career')} />
+          </div>
+        </div>
+        <div>
+          <Field label="목표 / 관심사">
+            <Textarea
+              value={state.about.goals}
+              onChange={(e) => update({ about: { ...state.about, goals: e.target.value } })}
+              placeholder="앞으로 어떤 일을 하고 싶은지 적어주세요"
+              disabled={goalsLoading}
+              className={goalsLoading ? 'opacity-60' : ''}
+            />
+          </Field>
+          <div className="mt-1 flex justify-end">
+            <AIBtn loading={goalsLoading} onClick={() => handleImproveAbout('goals')} />
+          </div>
+        </div>
       </div>
 
       <div>
