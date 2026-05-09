@@ -1,6 +1,6 @@
 import { Fragment, useState, useMemo } from 'react'
 import type React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { cn } from '../utils/cn'
 import { useBuilder } from '../context/BuilderContext'
 import { Section } from '../components/common/Section'
@@ -207,22 +207,31 @@ function StackGroup({ g, selected, toggle, addCustom }: StackGroupProps) {
           )
         })}
         <form
-          onSubmit={(e) => { e.preventDefault(); addCustom(g.key, val); setVal('') }}
-          className="inline-flex"
+          onSubmit={(e) => { e.preventDefault(); if (val.trim()) { addCustom(g.key, val); setVal('') } }}
+          className="inline-flex items-center gap-1"
         >
           <input
             value={val}
             onChange={(e) => setVal(e.target.value)}
             placeholder="+ 직접 추가"
-            className="h-7 w-32 rounded-md border border-dashed border-white/15 bg-transparent px-2 text-[12px] text-slate-300 placeholder:text-slate-500 focus:border-violet-400/50 outline-none"
+            className="h-7 w-28 rounded-md border border-dashed border-white/15 bg-transparent px-2 text-[12px] text-slate-300 placeholder:text-slate-500 focus:border-violet-400/50 outline-none"
           />
+          {val.trim() && (
+            <button
+              type="submit"
+              className="h-7 w-7 rounded-md border border-violet-400/40 bg-violet-500/20 text-violet-200 text-[14px] font-bold hover:bg-violet-500/35 flex items-center justify-center"
+              aria-label="추가"
+            >
+              +
+            </button>
+          )}
         </form>
       </div>
     </div>
   )
 }
 
-interface StepStackProps { state: BuilderState; update: (p: Partial<BuilderState>) => void }
+interface StepStackProps { state: BuilderState; update: (patch: Partial<BuilderState> | ((s: BuilderState) => BuilderState)) => void }
 
 function StepStack({ state, update }: StepStackProps) {
   const toggle = (group: string, item: string) => {
@@ -231,10 +240,13 @@ function StepStack({ state, update }: StepStackProps) {
     update({ stack: { ...state.stack, [group]: next } })
   }
   const addCustom = (group: string, value: string) => {
-    if (!value.trim()) return
-    const cur = (state.stack as any)[group] as string[] || []
-    if (cur.includes(value)) return
-    update({ stack: { ...state.stack, [group]: [...cur, value.trim()] } })
+    const trimmed = value.trim()
+    if (!trimmed) return
+    update((s) => {
+      const cur = ((s.stack as any)[group] as string[]) || []
+      if (cur.includes(trimmed)) return s
+      return { ...s, stack: { ...s.stack, [group]: [...cur, trimmed] } }
+    })
   }
   return (
     <div className="space-y-4">
@@ -444,10 +456,10 @@ export default function BuilderPage() {
 
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-ink-950/70 border-b border-white/5">
         <div className="mx-auto flex h-14 w-full max-w-[1100px] items-center justify-between px-5">
-          <a href="/" className="flex items-center gap-2.5">
+          <Link to="/" className="flex items-center gap-2.5">
             <div className="grid h-8 w-8 place-items-center rounded-lg glass ring-grad"><Icon name="logo-c" size={18} /></div>
             <span className="text-[15px] font-bold">Cofolio</span>
-          </a>
+          </Link>
           <div className="flex items-center gap-2">
             <button onClick={fillExample} className="hidden sm:inline-flex items-center gap-1.5 text-[12px] text-slate-300 hover:text-white px-2.5 h-8 rounded-lg border border-white/10 bg-white/[0.03]">
               <Icon name="sparkles" size={12} /> 예시 채우기

@@ -49,8 +49,13 @@ export function Navbar() {
           </PrimaryBtn>
         </div>
 
-        <button className="md:hidden rounded-lg p-2 text-slate-300 hover:bg-white/5" onClick={() => setOpen(!open)}>
-          <Icon name="menu" size={20} />
+        <button
+          className="md:hidden rounded-lg p-2 text-slate-300 hover:bg-white/5"
+          onClick={() => setOpen(!open)}
+          aria-label={open ? '메뉴 닫기' : '메뉴 열기'}
+          aria-expanded={open}
+        >
+          <Icon name={open ? 'x' : 'menu'} size={20} />
         </button>
       </div>
 
