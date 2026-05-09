@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+cofolio-app/node_modules/
+
+# Build output
+dist/
+cofolio-app/dist/
+
+# Environment variables (API keys etc.)
+.env
+.env.local
+.env*.local
+cofolio-app/.env
+cofolio-app/.env.local
+cofolio-app/.env*.local
+
+# Vite cache
+cofolio-app/.vite/
+
+# TypeScript build info
+*.tsbuildinfo
+cofolio-app/node_modules/.tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code local settings
+.claude/
+cofolio-app/.claude/
+
+# Editor
+.vscode/
+.idea/
+*.swp
