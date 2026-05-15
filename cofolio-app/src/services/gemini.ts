@@ -4,6 +4,8 @@ import type { BuilderState, PortfolioResult } from '../types'
 // ── Model ─────────────────────────────────────────────────────────────────────
 const MODEL = 'llama-3.3-70b-versatile'
 
+const SYSTEM_KO = '당신은 한국어 전용 어시스턴트입니다. 반드시 한국어(한글)로만 답하세요. 한자, 중국어, 일본어는 절대 사용하지 마세요. 영문 기술 용어(React, TypeScript 등)는 그대로 사용해도 됩니다.'
+
 // ── Utilities ─────────────────────────────────────────────────────────────────
 export const hasApiKey = () => !!import.meta.env.VITE_GROQ_API_KEY
 
@@ -104,9 +106,12 @@ export async function analyzePortfolio(state: BuilderState): Promise<PortfolioRe
 
   const completion = await client.chat.completions.create({
     model: MODEL,
-    messages: [{ role: 'user', content: buildPrompt(state) }],
+    messages: [
+      { role: 'system', content: SYSTEM_KO },
+      { role: 'user', content: buildPrompt(state) },
+    ],
     response_format: { type: 'json_object' },
-    temperature: 0.7,
+    temperature: 0.4,
   })
 
   const text = completion.choices[0]?.message?.content ?? ''
@@ -175,8 +180,11 @@ export async function improveField(
   const client = getClient()
   const completion = await client.chat.completions.create({
     model: MODEL,
-    messages: [{ role: 'user', content: buildImprovePrompt(type, value, ctx) }],
-    temperature: 0.7,
+    messages: [
+      { role: 'system', content: SYSTEM_KO },
+      { role: 'user', content: buildImprovePrompt(type, value, ctx) },
+    ],
+    temperature: 0.4,
   })
 
   return completion.choices[0]?.message?.content?.trim() || value
