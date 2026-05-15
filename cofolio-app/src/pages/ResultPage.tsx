@@ -16,7 +16,7 @@ const FALLBACK_PROJECTS = [
   { id: 2, title: 'Mealy', desc: 'AI 식단 추천', role: 'Full-stack', github: 'github.com/u/mealy', deploy: 'mealy.app' },
 ]
 
-const FALLBACK_PROFILE = { name: '김지호', role: 'Frontend Developer', location: '서울', bio: '협업 도구를 만드는 3년차 프론트엔드' }
+const FALLBACK_PROFILE = { name: '김근호', role: 'Frontend Developer', location: '서울', bio: '사용자 경험을 코드로 다듬는 3년차 프론트엔드' }
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 

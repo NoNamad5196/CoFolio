@@ -30,7 +30,7 @@ export const TEMPLATE_PREVIEWS: Record<TemplateType, TemplatePreview> = {
   developer: {
     tone: 'violet',
     accent: 'from-violet-500 via-indigo-500 to-cyan-500',
-    name: '김지호',
+    name: '김근호',
     role: 'Frontend Developer',
     bio: '협업 도구를 만드는 3년차 프론트엔드 · React · TypeScript',
     location: '서울',

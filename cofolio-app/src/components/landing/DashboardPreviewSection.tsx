@@ -87,7 +87,7 @@ export function DashboardPreviewSection() {
           <div className="p-5 sm:p-6 space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div className="text-[11px] text-slate-500">안녕하세요, 김지호님</div>
+                <div className="text-[11px] text-slate-500">안녕하세요, 김근호님</div>
                 <div className="text-[20px] font-semibold tracking-tight">포트폴리오 작업실</div>
               </div>
               <div className="flex items-center gap-2">

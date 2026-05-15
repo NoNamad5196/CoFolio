@@ -41,7 +41,7 @@ export function PortfolioMockup() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <div className="text-[17px] font-semibold">김지호</div>
+                <div className="text-[17px] font-semibold">김근호</div>
                 <Tag tone="violet">Frontend Developer</Tag>
               </div>
               <div className="text-[12px] text-slate-400 mt-0.5">서울 · 3년차 · React · TypeScript · 디자인 시스템</div>

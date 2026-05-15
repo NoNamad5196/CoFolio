@@ -47,7 +47,7 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     techStack: ['React', 'TypeScript', 'Tailwind', 'Framer Motion', 'Vite'],
     thumb: 'from-violet-600/40 via-indigo-500/30 to-cyan-500/20',
     lines: 5,
-    profile: { name: '김지호', initials: '지', bio: '서울 · 3년차 · UI 시스템 빌더' },
+    profile: { name: '김근호', initials: '근', bio: '서울 · 3년차 · UI 시스템 빌더' },
     previewStats: [
       { l: 'Projects', v: '14', c: 'violet' },
       { l: 'Tech Stacks', v: '21', c: 'indigo' },
