@@ -16,8 +16,7 @@ export function WorkflowSection() {
         sub="입력 → 정리 → 공유. 그게 전부입니다."
       />
       <div className="relative mt-14">
-        <div aria-hidden className="absolute left-0 right-0 top-[44px] hidden lg:block h-px bg-gradient-to-r from-transparent via-violet-500/40 to-transparent" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {STEPS.map((s, i) => (
             <div key={s.n} className="reveal relative" style={{ transitionDelay: `${i * 80}ms` }}>
               <div className="glass rounded-2xl p-6 lift">

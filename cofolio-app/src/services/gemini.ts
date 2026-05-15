@@ -2,7 +2,7 @@ import { GoogleGenAI } from '@google/genai'
 import type { BuilderState, PortfolioResult } from '../types'
 
 // ── Model ─────────────────────────────────────────────────────────────────────
-const MODEL = 'gemini-2.0-flash-lite'
+const MODEL = 'gemini-2.0-flash'
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 export const hasApiKey = () => !!import.meta.env.VITE_GEMINI_API_KEY

@@ -1,5 +1,4 @@
 import { Routes, Route } from 'react-router-dom'
-import { useReveal } from './hooks/useReveal'
 import { ThemeToggle } from './components/common/ThemeToggle'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import LandingPage from './pages/LandingPage'
@@ -11,8 +10,6 @@ import DashboardPage from './pages/DashboardPage'
 import PublicPortfolioPage from './pages/PublicPortfolioPage'
 
 export default function App() {
-  useReveal()
-
   return (
     <>
       <Routes>

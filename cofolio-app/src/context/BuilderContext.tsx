@@ -195,7 +195,15 @@ export function BuilderProvider({ children }: { children: React.ReactNode }) {
       .eq('user_id', user.id)
       .maybeSingle()
 
-    if (!data) return
+    if (!data) {
+      // No portfolio in DB → wipe any stale localStorage so fresh user sees blank state
+      setState(DEFAULT_BUILDER)
+      saveBuilder(DEFAULT_BUILDER)
+      localStorage.removeItem(RESULT_KEY)
+      setResultState(null)
+      setSavedSlug(null)
+      return
+    }
 
     const portfolio = data as { builder_state: unknown; portfolio_result: unknown; slug: string }
 
