@@ -170,7 +170,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            <PrimaryBtn type="submit" size="lg" className="w-full" onClick={() => submit()}>
+            <PrimaryBtn type="submit" size="lg" className="w-full">
               {loading
                 ? <><span className="h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" /> 처리 중…</>
                 : <>로그인 / 회원가입 <Icon name="arrow" size={14} /></>}
