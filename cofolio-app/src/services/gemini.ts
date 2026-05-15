@@ -1,15 +1,17 @@
-import { GoogleGenAI } from '@google/genai'
+import Groq from 'groq-sdk'
 import type { BuilderState, PortfolioResult } from '../types'
 
 // ── Model ─────────────────────────────────────────────────────────────────────
-const MODEL = 'gemini-2.0-flash-lite'
+const MODEL = 'llama-3.3-70b-versatile'
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
-export const hasApiKey = () => !!import.meta.env.VITE_GEMINI_API_KEY
+export const hasApiKey = () => !!import.meta.env.VITE_GROQ_API_KEY
 
 function getClient() {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string
-  return new GoogleGenAI({ apiKey })
+  return new Groq({
+    apiKey: import.meta.env.VITE_GROQ_API_KEY as string,
+    dangerouslyAllowBrowser: true,
+  })
 }
 
 // ── Fallback ──────────────────────────────────────────────────────────────────
@@ -98,15 +100,16 @@ JSON 외 다른 텍스트 없이 순수 JSON만 응답하세요.`
 export async function analyzePortfolio(state: BuilderState): Promise<PortfolioResult> {
   if (!hasApiKey()) return FALLBACK_RESULT
 
-  const ai = getClient()
+  const client = getClient()
 
-  const response = await ai.models.generateContent({
+  const completion = await client.chat.completions.create({
     model: MODEL,
-    contents: buildPrompt(state),
-    config: { responseMimeType: 'application/json' },
+    messages: [{ role: 'user', content: buildPrompt(state) }],
+    response_format: { type: 'json_object' },
+    temperature: 0.7,
   })
 
-  const text = response.text ?? ''
+  const text = completion.choices[0]?.message?.content ?? ''
   const parsed = JSON.parse(text) as Partial<PortfolioResult>
 
   return {
@@ -169,11 +172,12 @@ export async function improveField(
 ): Promise<string> {
   if (!hasApiKey()) return value
 
-  const ai = getClient()
-  const response = await ai.models.generateContent({
+  const client = getClient()
+  const completion = await client.chat.completions.create({
     model: MODEL,
-    contents: buildImprovePrompt(type, value, ctx),
+    messages: [{ role: 'user', content: buildImprovePrompt(type, value, ctx) }],
+    temperature: 0.7,
   })
 
-  return response.text?.trim() || value
+  return completion.choices[0]?.message?.content?.trim() || value
 }
