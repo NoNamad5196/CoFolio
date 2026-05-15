@@ -6,6 +6,23 @@ const MODEL = 'llama-3.3-70b-versatile'
 
 const SYSTEM_KO = '당신은 한국어 전용 어시스턴트입니다. 반드시 한국어(한글)로만 답하세요. 한자, 중국어, 일본어는 절대 사용하지 마세요. 영문 기술 용어(React, TypeScript 등)는 그대로 사용해도 됩니다.'
 
+// ── Score weights (총점은 코드에서 계산) ──────────────────────────────────────
+const SCORE_WEIGHTS: Record<string, number> = {
+  '완성도': 0.25,
+  '임팩트': 0.25,
+  '기술 깊이': 0.20,
+  '표현력': 0.15,
+  '독창성': 0.15,
+}
+
+function calcScore(breakdown: { label: string; value: number }[]): number {
+  const total = breakdown.reduce((sum, item) => {
+    const w = SCORE_WEIGHTS[item.label] ?? 0.2
+    return sum + item.value * w
+  }, 0)
+  return Math.round(total)
+}
+
 // ── Utilities ─────────────────────────────────────────────────────────────────
 export const hasApiKey = () => !!import.meta.env.VITE_GROQ_API_KEY
 
@@ -76,13 +93,12 @@ ${projectList || '미입력'}
 ## 응답 형식 (반드시 이 JSON 스키마를 따르세요)
 
 {
-  "score": <0~100 정수, 포트폴리오 전체 완성도 점수>,
   "scoreBreakdown": [
-    { "label": "완성도", "value": <0~100> },
-    { "label": "임팩트", "value": <0~100> },
-    { "label": "기술 깊이", "value": <0~100> },
-    { "label": "표현력", "value": <0~100> },
-    { "label": "독창성", "value": <0~100> }
+    { "label": "완성도", "value": <0~100, 프로필·프로젝트·스택 등 빠진 항목 없이 채워져 있는지> },
+    { "label": "임팩트", "value": <0~100, 프로젝트 설명에 수치·결과가 드러나는지> },
+    { "label": "기술 깊이", "value": <0~100, 스택 구성이 실무 수준인지> },
+    { "label": "표현력", "value": <0~100, 문장이 자연스럽고 설득력 있는지> },
+    { "label": "독창성", "value": <0~100, 프로젝트 아이디어나 접근이 차별화돼 있는지> }
   ],
   "enhancedDescriptions": {
     <project_id_as_number>: "<개선된 프로젝트 설명 1~2문장, 문제→해결→결과 구조, 한국어>"
@@ -117,9 +133,11 @@ export async function analyzePortfolio(state: BuilderState): Promise<PortfolioRe
   const text = completion.choices[0]?.message?.content ?? ''
   const parsed = JSON.parse(text) as Partial<PortfolioResult>
 
+  const breakdown = parsed.scoreBreakdown?.length ? parsed.scoreBreakdown : FALLBACK_RESULT.scoreBreakdown
+
   return {
-    score: parsed.score ?? FALLBACK_RESULT.score,
-    scoreBreakdown: parsed.scoreBreakdown?.length ? parsed.scoreBreakdown : FALLBACK_RESULT.scoreBreakdown,
+    score: calcScore(breakdown),
+    scoreBreakdown: breakdown,
     enhancedDescriptions: parsed.enhancedDescriptions ?? {},
     interviewQuestions: parsed.interviewQuestions?.length ? parsed.interviewQuestions : FALLBACK_RESULT.interviewQuestions,
     suggestions: parsed.suggestions?.length ? parsed.suggestions : FALLBACK_RESULT.suggestions,
