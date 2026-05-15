@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useBuilder } from '../context/BuilderContext'
+import { useAuth } from '../context/AuthContext'
 import { Section, Eyebrow } from '../components/common/Section'
 import { PrimaryBtn, GhostBtn } from '../components/common/Button'
 import { Icon } from '../components/common/Icon'
@@ -17,6 +18,8 @@ const FALLBACK_PROJECTS = [
 
 const FALLBACK_PROFILE = { name: '김지호', role: 'Frontend Developer', location: '서울', bio: '협업 도구를 만드는 3년차 프론트엔드' }
 
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
+
 function scorePercentile(score: number): string {
   if (score >= 90) return '상위 5% — 최고예요!'
   if (score >= 80) return '상위 12% — 훌륭해요!'
@@ -26,17 +29,40 @@ function scorePercentile(score: number): string {
 }
 
 export default function ResultPage() {
-  const { state, result } = useBuilder()
+  const { state, result, saveToSupabase, savedSlug } = useBuilder()
+  const { user } = useAuth()
   const navigate = useNavigate()
+
   const [exportOpen, setExportOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+  const hasSaved = useRef(false)
 
   const r = result ?? FALLBACK_RESULT
   const projects = state.projects?.length ? state.projects : FALLBACK_PROJECTS
   const allStack = Object.values(state.stack || {}).flat()
   const profile = state.profile?.name ? state.profile : FALLBACK_PROFILE
 
-  const shareUrl = `cofolio.app/p/${(profile.name || 'you').toLowerCase().replace(/\s+/g, '-')}`
+  // Build share URL: use saved DB slug when available, else derive from name
+  const shareUrl = savedSlug
+    ? `cofolio.app/p/${savedSlug}`
+    : `cofolio.app/p/${(profile.name || 'you').toLowerCase().replace(/\s+/g, '-')}`
+
+  // ── Auto-save when user is present ──────────────────────────────────────────
+  useEffect(() => {
+    if (!user || hasSaved.current) return
+    hasSaved.current = true
+    setSaveStatus('saving')
+
+    saveToSupabase().then((slug) => {
+      if (slug) {
+        setSaveStatus('saved')
+        setTimeout(() => setSaveStatus('idle'), 3000)
+      } else {
+        setSaveStatus('error')
+      }
+    })
+  }, [user, saveToSupabase])
 
   const copy = () => {
     navigator.clipboard?.writeText('https://' + shareUrl).catch(() => {})
@@ -47,6 +73,20 @@ export default function ResultPage() {
   return (
     <div className="relative min-h-screen">
       <div aria-hidden className="absolute inset-0 -z-10 bg-radial-violet opacity-50" />
+
+      {/* ── Save status toast ─────────────────────────────────────────────── */}
+      {saveStatus !== 'idle' && (
+        <div className={cn(
+          'fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-full px-4 py-2 text-[12.5px] font-medium shadow-lg',
+          saveStatus === 'saving' && 'border border-white/10 bg-ink-900/90 text-slate-300',
+          saveStatus === 'saved' && 'border border-emerald-400/30 bg-emerald-900/80 text-emerald-200',
+          saveStatus === 'error' && 'border border-red-400/30 bg-red-900/80 text-red-200',
+        )}>
+          {saveStatus === 'saving' && <><span className="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin" /> 저장 중…</>}
+          {saveStatus === 'saved' && <><Icon name="check" size={13} /> 포트폴리오가 저장됐어요 ✓</>}
+          {saveStatus === 'error' && '저장 실패 — 나중에 다시 시도해주세요'}
+        </div>
+      )}
 
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-ink-950/70 border-b border-white/5">
         <div className="mx-auto flex h-14 w-full max-w-[1180px] items-center justify-between px-5">
@@ -82,7 +122,7 @@ export default function ResultPage() {
           </div>
 
           <div className="mt-7 grid grid-cols-1 lg:grid-cols-[1fr,360px] gap-5">
-            {/* portfolio preview */}
+            {/* ── portfolio preview ─────────────────────────────────────── */}
             <div className="reveal in glass-strong rounded-2xl overflow-hidden ring-grad glow-violet">
               <div className="flex items-center gap-3 border-b border-white/5 px-4 py-2.5 bg-ink-900/60">
                 <WindowDots />
@@ -160,7 +200,7 @@ export default function ResultPage() {
               </div>
             </div>
 
-            {/* sidebar — score + suggestions + interview questions */}
+            {/* ── sidebar ───────────────────────────────────────────────── */}
             <div className="space-y-5">
               <div className="reveal in glass rounded-2xl p-5 text-center">
                 <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Portfolio Score</div>
@@ -223,6 +263,21 @@ export default function ResultPage() {
           </div>
         </div>
       </Section>
+
+      {/* ── Non-auth sticky banner ─────────────────────────────────────────── */}
+      {!user && (
+        <div className="fixed bottom-0 inset-x-0 z-40 border-t border-violet-500/20 bg-ink-950/95 backdrop-blur-xl">
+          <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4 px-5 py-3">
+            <div>
+              <div className="text-[13px] font-semibold text-white">포트폴리오를 저장하고 싶으신가요?</div>
+              <div className="text-[11.5px] text-slate-400 mt-0.5">로그인하면 공개 링크를 받고 방문자 수를 확인할 수 있어요.</div>
+            </div>
+            <PrimaryBtn size="sm" onClick={() => navigate('/login', { state: { from: { pathname: '/result' } } })}>
+              <Icon name="arrow" size={13} /> 로그인하여 저장하기
+            </PrimaryBtn>
+          </div>
+        </div>
+      )}
 
       <ExportModal isOpen={exportOpen} onClose={() => setExportOpen(false)} portfolioName={profile.name || 'portfolio'} />
     </div>

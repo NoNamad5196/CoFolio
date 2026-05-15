@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import type { BuilderState, PortfolioResult, TemplateType } from '../types'
+import { supabase } from '../lib/supabase'
+import { useAuth } from './AuthContext'
 
 const STORAGE_KEY = 'cofolio.builder.v1'
 const RESULT_KEY = 'cofolio.result.v1'
@@ -27,6 +29,30 @@ export function saveBuilder(s: BuilderState) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)) } catch {}
 }
 
+// ── Slug generator ─────────────────────────────────────────────────────────────
+async function generateUniqueSlug(name: string): Promise<string> {
+  const base = name
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[^a-z0-9-]/g, '')
+    || 'portfolio'
+
+  let slug = base
+  let n = 1
+
+  while (true) {
+    const { data } = await supabase
+      .from('portfolios')
+      .select('id')
+      .eq('slug', slug)
+      .maybeSingle()
+    if (!data) return slug
+    if (n > 100) return `${base}-${crypto.randomUUID().slice(0, 8)}`
+    slug = `${base}-${++n}`
+  }
+}
+
+// ── Context types ──────────────────────────────────────────────────────────────
 interface BuilderContextValue {
   state: BuilderState
   result: PortfolioResult | null
@@ -34,6 +60,10 @@ interface BuilderContextValue {
   setResult: (r: PortfolioResult) => void
   reset: () => void
   fillExample: () => void
+  saving: boolean
+  savedSlug: string | null
+  saveToSupabase: () => Promise<string | null>
+  loadFromSupabase: () => Promise<void>
 }
 
 const BuilderCtx = createContext<BuilderContextValue>({
@@ -43,6 +73,10 @@ const BuilderCtx = createContext<BuilderContextValue>({
   setResult: () => {},
   reset: () => {},
   fillExample: () => {},
+  saving: false,
+  savedSlug: null,
+  saveToSupabase: async () => null,
+  loadFromSupabase: async () => {},
 })
 
 function loadResult(): PortfolioResult | null {
@@ -54,9 +88,14 @@ function loadResult(): PortfolioResult | null {
   }
 }
 
+// ── Provider ───────────────────────────────────────────────────────────────────
 export function BuilderProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
+
   const [state, setState] = useState<BuilderState>(loadBuilder)
   const [result, setResultState] = useState<PortfolioResult | null>(loadResult)
+  const [saving, setSaving] = useState(false)
+  const [savedSlug, setSavedSlug] = useState<string | null>(null)
 
   useEffect(() => { saveBuilder(state) }, [state])
 
@@ -97,8 +136,89 @@ export function BuilderProvider({ children }: { children: React.ReactNode }) {
     template: 'developer',
   }), [])
 
+  // ── Save to Supabase ─────────────────────────────────────────────────────────
+  const saveToSupabase = useCallback(async (): Promise<string | null> => {
+    if (!user) return null
+    setSaving(true)
+
+    try {
+      // Check if user already has a portfolio
+      const { data: existing } = await supabase
+        .from('portfolios')
+        .select('id, slug')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      const builderData = state as unknown as Record<string, unknown>
+      const resultData = result as unknown as Record<string, unknown> | null
+
+      if (existing) {
+        // Update existing portfolio
+        const { error } = await supabase
+          .from('portfolios')
+          .update({ builder_state: builderData, portfolio_result: resultData })
+          .eq('id', (existing as { id: string; slug: string }).id)
+        if (error) throw error
+        const slug = (existing as { id: string; slug: string }).slug
+        setSavedSlug(slug)
+        return slug
+      } else {
+        // Create new portfolio with unique slug
+        const slug = await generateUniqueSlug(state.profile.name || 'portfolio')
+        const { error } = await supabase
+          .from('portfolios')
+          .insert({
+            user_id: user.id,
+            slug,
+            builder_state: builderData,
+            portfolio_result: resultData,
+          })
+        if (error) throw error
+        setSavedSlug(slug)
+        return slug
+      }
+    } catch (e) {
+      console.error('[saveToSupabase]', e)
+      return null
+    } finally {
+      setSaving(false)
+    }
+  }, [user, state, result])
+
+  // ── Load from Supabase ───────────────────────────────────────────────────────
+  const loadFromSupabase = useCallback(async () => {
+    if (!user) return
+
+    const { data } = await supabase
+      .from('portfolios')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!data) return
+
+    const portfolio = data as { builder_state: unknown; portfolio_result: unknown; slug: string }
+
+    if (portfolio.builder_state) {
+      const loaded = { ...DEFAULT_BUILDER, ...(portfolio.builder_state as BuilderState) }
+      setState(loaded)
+      saveBuilder(loaded)
+    }
+    if (portfolio.portfolio_result) {
+      const r = portfolio.portfolio_result as PortfolioResult
+      setResultState(r)
+      try { localStorage.setItem(RESULT_KEY, JSON.stringify(r)) } catch {}
+    }
+    if (portfolio.slug) {
+      setSavedSlug(portfolio.slug)
+    }
+  }, [user])
+
   return (
-    <BuilderCtx.Provider value={{ state, result, update, setResult, reset, fillExample }}>
+    <BuilderCtx.Provider value={{
+      state, result, update, setResult, reset, fillExample,
+      saving, savedSlug, saveToSupabase, loadFromSupabase,
+    }}>
       {children}
     </BuilderCtx.Provider>
   )
