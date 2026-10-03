@@ -1,73 +1,18 @@
-# React + TypeScript + Vite
+# CoFolio 앱
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+실행·구현·제약 사항은 [루트 README](../README.md), 구조는 [아키텍처 문서](../docs/redesign-v2-architecture.md), 검증 결과는 [QA 기록](../docs/redesign-v2-qa.md)을 참고하세요.
 
-Currently, two official plugins are available:
+Node.js 24.12 이상이 필요합니다.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```powershell
+npm ci
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- 개발 UI: http://127.0.0.1:5173
+- API와 production UI: http://127.0.0.1:4174
+- 검사: `npm test`, `npm run lint`, `npm run build`
+- production: `npm run build` 후 `npm start`
+- 서버 전용 AI 설정: `.env.example` 참고. 키 없이도 규칙 기반 분석 가능.
+- 로컬 저장: `data/cofolio.sqlite`와 사용자별 HTTP-only 세션, 별도 비회원 localStorage.
+- 운영: [cofolio-app.vercel.app](https://cofolio-app.vercel.app), Vercel + Supabase Auth/PostgreSQL. [배포 문서](../docs/deployment.md)

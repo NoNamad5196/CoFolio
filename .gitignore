@@ -33,3 +33,6 @@ cofolio-app/.claude/
 .vscode/
 .idea/
 *.swp
+cofolio-app/data/
+cofolio-app/test-output/
+design-reference-v2/

@@ -1,338 +1,100 @@
-# CoFolio
+# CoFolio Workspace V2
 
-> AI 기반 포트폴리오 빌더 SaaS 프로토타입
+개발자 취업용 프로젝트 경험을 근거와 연결해 분석하고 포트폴리오로 정리하는 작업 공간입니다.
 
-CoFolio는 학생, 취업 준비생, 주니어 개발자가 자신의 프로젝트 경험을 더 쉽게 정리하고 포트폴리오 형태로 구성할 수 있도록 돕는 웹서비스 프로젝트입니다.
+공개 GitHub / README / 직접 입력 → 근거 확인 → 누락 정보 보완 → 개선 제안 검토 → Builder → Preview / Export 흐름이 동작합니다.
 
-현재 단계의 목표는 완성된 백엔드 서비스가 아니라, **AI 포트폴리오 빌더 SaaS의 프론트엔드 디자인과 사용자 흐름을 먼저 설계하는 것**입니다. 이후 React + TypeScript 또는 Next.js + TypeScript 기반으로 실제 기능을 구현할 예정입니다.
+운영 주소: [cofolio-app.vercel.app](https://cofolio-app.vercel.app). Vercel API와 Supabase Auth/PostgreSQL을 사용합니다. [배포 기록](docs/deployment.md)
 
----
+## 실행
 
-## 프로젝트 개요
+Node.js **24.12 이상**이 필요합니다. Node 내장 SQLite와 TypeScript 실행을 사용합니다.
 
-포트폴리오를 처음 작성하는 사용자는 보통 다음과 같은 문제를 겪습니다.
-
-- 프로젝트 설명을 어떻게 구조화해야 할지 모름
-- 기술스택을 단순 나열만 하고 실제 역할과 연결하지 못함
-- 문제 해결 과정, 성과, 배운 점을 구체적으로 작성하지 못함
-- README, 발표 자료, 포트폴리오 문서가 따로 흩어져 있음
-- 결과물이 취업용 포트폴리오로 충분한지 판단하기 어려움
-
-CoFolio는 사용자가 프로젝트 정보, 기술스택, GitHub 링크, 배포 링크, 목표 직무 등을 입력하면 AI가 포트폴리오 구성에 필요한 내용을 분석하고, 개선 방향을 제안하며, 보기 좋은 포트폴리오 페이지로 정리하는 서비스를 목표로 합니다.
-
----
-
-## 핵심 컨셉
-
-**프로젝트 입력 → AI 분석 → 포트폴리오 생성 → 결과 미리보기 → Export / Publish**
-
-CoFolio는 단순한 개인 포트폴리오 사이트가 아니라, 사용자가 여러 프로젝트를 입력하고 AI의 도움을 받아 포트폴리오 결과물을 만들어내는 **포트폴리오 제작 도구**입니다.
-
----
-
-## 주요 기능
-
-### 1. 랜딩페이지
-
-서비스의 목적과 핵심 기능을 소개하는 SaaS 스타일 랜딩페이지입니다.
-
-- 서비스 소개
-- 주요 기능 설명
-- Before / After 비교
-- 포트폴리오 생성 흐름 안내
-- 템플릿 미리보기
-- FAQ
-
-### 2. 포트폴리오 빌더
-
-사용자가 포트폴리오에 들어갈 기본 정보를 입력하는 화면입니다.
-
-- 이름 / 소개 입력
-- 목표 직무 입력
-- 기술스택 입력
-- 프로젝트 정보 입력
-- GitHub / 배포 링크 입력
-- 템플릿 선택
-
-### 3. AI 포트폴리오 분석
-
-입력된 프로젝트 설명을 바탕으로 포트폴리오 품질을 분석합니다.
-
-분석 예시:
-
-- 설명이 너무 추상적인지
-- 기술스택이 실제 역할과 연결되어 있는지
-- 문제 해결 과정이 드러나는지
-- 성과나 결과가 구체적인지
-- README 품질이 충분한지
-- 배포 링크 또는 GitHub 링크가 누락되었는지
-- 목표 직무와의 적합도가 높은지
-
-### 4. 결과 미리보기
-
-AI 분석 결과와 입력 정보를 바탕으로 생성된 포트폴리오 화면을 미리 확인합니다.
-
-- 포트폴리오 페이지 미리보기
-- 프로젝트 카드 확인
-- 기술스택 섹션 확인
-- 자기소개 / 프로젝트 설명 확인
-- 템플릿별 결과 확인
-
-### 5. Export / Publish
-
-생성된 포트폴리오를 외부로 공유하거나 파일로 내보내는 기능입니다.
-
-추후 구현 후보:
-
-- 공개 링크 생성
-- Markdown Export
-- HTML Export
-- PDF Export
-- GitHub Pages / Vercel 배포 연동
-
----
-
-## 현재 진행 상태
-
-현재 CoFolio는 **프론트 디자인 프로토타입 단계**입니다.
-
-확보된 화면 초안:
-
-- 랜딩페이지
-- 네비게이션
-- Hero 섹션
-- 기능 소개 섹션
-- Before / After 섹션
-- Workflow 섹션
-- 템플릿 미리보기
-- 포트폴리오 점수 분석 섹션
-- 쇼케이스
-- FAQ
-- 로그인 화면 목업
-- 포트폴리오 생성 Builder
-- 생성 중 화면
-- 결과 페이지
-- 대시보드 목업
-- 테마 토글
-- Export 모달
-
-아직 구현되지 않은 항목:
-
-- 실제 로그인 / 회원가입
-- 실제 DB 저장
-- 실제 AI 분석
-- 실제 포트폴리오 생성
-- 실제 PDF / HTML Export
-- 실제 결제 기능
-
----
-
-## 예상 기술 스택
-
-### Frontend
-
-- Next.js
-- React
-- TypeScript
-- Tailwind CSS
-- shadcn/ui 또는 자체 컴포넌트
-- Framer Motion
-
-### Backend / Infra
-
-- Next.js API Routes 또는 Server Actions
-- Supabase
-- PostgreSQL
-- Prisma 또는 Supabase Client
-- Vercel
-
-### AI
-
-- OpenAI API 또는 Claude API
-- 포트폴리오 분석 프롬프트
-- 프로젝트 설명 개선 프롬프트
-- 직무별 포트폴리오 피드백 프롬프트
-
----
-
-## TypeScript 개발 원칙
-
-CoFolio의 실제 구현 단계에서는 모든 프론트엔드 코드를 TypeScript 기반으로 작성합니다.
-
-- `.js` 파일 사용 지양
-- `.jsx` 파일 사용 지양
-- React 컴포넌트는 `.tsx`로 작성
-- 일반 유틸 함수와 목업 데이터는 `.ts`로 작성
-- `any` 타입은 가능한 한 사용하지 않음
-- `Portfolio`, `Project`, `AnalysisResult`, `User`, `ExportOption` 등의 타입을 먼저 정의
-- Claude Design에서 생성한 JSX는 최종 코드가 아니라 디자인 참고용으로만 사용
-- 실제 개발 시 TSX 컴포넌트 구조로 재정리
-
----
-
-## MVP 범위
-
-1차 MVP에서는 모든 기능을 완성하지 않고, 포트폴리오 빌더의 핵심 흐름만 구현합니다.
-
-### MVP에 포함할 기능
-
-- 랜딩페이지
-- 포트폴리오 입력 폼
-- 프로젝트 정보 입력
-- 템플릿 선택
-- 결과 미리보기 화면
-- 목업 기반 AI 분석 결과 표시
-- Vercel 배포
-
-### MVP에서 제외할 기능
-
-- 실제 결제
-- 복잡한 템플릿 마켓
-- 실제 PDF Export
-- GitHub 자동 분석
-- 다중 사용자 협업
-- 완성형 AI 에이전트 기능
-
----
-
-## 개발 로드맵
-
-### Phase 1. 프론트 디자인 정리
-
-- Claude Design 결과물 분석
-- 화면 구조 확정
-- 섹션 단위 컴포넌트 분리
-- TSX 컴포넌트 구조 설계
-
-### Phase 2. 프론트 프로토타입 구현
-
-- Next.js + TypeScript 프로젝트 구성
-- 랜딩페이지 구현
-- 빌더 화면 구현
-- 결과 화면 구현
-- 대시보드 목업 구현
-- Vercel 배포
-
-### Phase 3. 최소 백엔드 구현
-
-- 회원가입 / 로그인
-- 사용자별 포트폴리오 저장
-- 프로젝트 CRUD
-- Supabase 연동
-
-### Phase 4. AI 분석 기능 구현
-
-- 입력값 기반 포트폴리오 분석
-- 개선 제안 생성
-- 분석 점수 표시
-- 분석 결과 저장
-
-### Phase 5. Export / Publish 기능 구현
-
-- 공개 링크 생성
-- Markdown Export
-- PDF Export
-- 템플릿별 결과물 생성
-
----
-
-## 프로젝트 구조 예시
-
-```txt
-cofolio/
-├── app/
-│   ├── page.tsx
-│   ├── builder/
-│   │   └── page.tsx
-│   ├── dashboard/
-│   │   └── page.tsx
-│   └── result/
-│       └── page.tsx
-├── components/
-│   ├── common/
-│   ├── landing/
-│   ├── builder/
-│   ├── dashboard/
-│   └── portfolio/
-├── data/
-│   └── mock.ts
-├── lib/
-│   ├── utils.ts
-│   └── ai.ts
-├── types/
-│   └── index.ts
-└── README.md
+```powershell
+cd cofolio-app
+npm ci
+npm run dev
 ```
 
----
+[개발 화면](http://127.0.0.1:5173)을 열면 됩니다. 위 명령은 Vite(5173)와 API(4174)를 함께 실행합니다. GitHub 가져오기는 서버에서 인터넷에 연결할 수 있어야 합니다.
 
-## 데이터 구조 초안
+API 키 없이도 근거 연결, 8개 항목 점검, 사용자 진술을 재구성한 제안, 저장과 내보내기가 동작합니다. 첫 화면은 비어 있으며 예시 자료는 사용자가 선택할 때만 추가됩니다.
 
-```ts
-export type Project = {
-  id: string;
-  title: string;
-  summary: string;
-  problem: string;
-  solution: string;
-  techStack: string[];
-  role: string;
-  githubUrl?: string;
-  deployUrl?: string;
-  result?: string;
-  learned?: string;
-};
+## 구현한 기능
 
-export type Portfolio = {
-  id: string;
-  ownerName: string;
-  targetRole: string;
-  introduction: string;
-  techStack: string[];
-  projects: Project[];
-  template: string;
-};
+- **Import:** 공개 GitHub 저장소의 실제 metadata·언어·README, README 붙여넣기, 직접 입력. 저장소 URL 검증, 요청 제한·타임아웃·오류 후 재시도.
+- **Workspace:** 프로젝트 탐색기, 7개 경험 필드, 근거 자료와 8개 분석 기준. README의 명시된 문제·구현 절을 원문으로 발췌하고 개인 진술과 구분.
+- **분석:** 문제 정의 / 기술 선택 / 구현 깊이 / 본인 기여 / 문제 해결 / 결과·성과 / 문서화 / 직무 연관성을 충분·보완 필요·부족·근거 없음으로 표시.
+- **직무:** 백엔드·프론트엔드·AI·게임의 검토 초점. 숫자 점수나 합격 확률을 만들지 않음.
+- **개선 Diff:** 원문·제안·이유·사용 근거, 적용·거절·직접 수정. 원문이나 직무가 바뀌면 재분석이 필요하며 자동으로 덮어쓰지 않음.
+- **Builder:** 기본 정보·기술·포함할 프로젝트·순서·별도 설명 편집, 실시간/전체 미리보기, Markdown·독립 HTML 다운로드.
+- **인증·저장:** 이메일/비밀번호 가입·로그인·로그아웃, 운영 환경 Supabase Auth·PostgreSQL 저장, 사용자 RLS와 충돌 감지. 로컬 개발은 SQLite, 체험 자료는 별도 localStorage에 보관.
+- **복구:** 저장 상태·백업, API 실패 안내, 손상된 체험 데이터 덮어쓰기 방지, 분석 실패 시 규칙 기반 처리.
 
-export type AnalysisResult = {
-  score: number;
-  strengths: string[];
-  weaknesses: string[];
-  suggestions: string[];
-};
+## 디자인 기준
+
+[Notion의 2026-09-11 재설계 결정](https://app.notion.com/p/35a7cdef782d81af9b8ffcca837fe420)이 제품 기준입니다. 사용자가 제공한 [최종 Figma Make](https://www.figma.com/make/KpsMyE47m5jvFtKUa0veg9/CoFolio?p=f&t=ys03fvZ0rwEHTiaX-0)의 실제 화면과 다운로드한 소스를 확인해 UI 기준으로 삼았습니다.
+
+밝은 중성 배경, 블루/인디고 포인트, 224px 탐색기, 편집·근거 분석 영역, Dashboard·Diff·Builder 구성을 반영했습니다. Figma의 샘플 점수는 근거 상태로 바꾸고 개인 기여나 성과를 자동 채워 넣지 않았습니다.
+
+## 선택적 AI 설정
+
+기존 파일이 없다면 `cofolio-app/.env.example`을 `.env.local`로 복사하고 아래 값을 서버 환경에 설정합니다. 기존 `.env.local`은 덮어쓰지 마세요.
+
+```dotenv
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
----
+로컬은 서버 재시작, Vercel은 환경변수 설정 후 재배포하고 분석 버튼으로 호출합니다. 운영 환경의 실제 AI 호출은 로그인이 필요하며 비회원은 규칙 분석을 사용합니다. **실제 모델 호출 검증은 사용자의 요청으로 추후 진행합니다.** 이번 QA는 키 없는 규칙 경로와 모의 모델의 성공·실패·잘못된 출력 경로를 검증했습니다.
 
-## 포트폴리오 포인트
+모델 호출은 서버에서만 실행됩니다. Vite는 `PUBLIC_` 접두사의 환경변수만 노출하므로 기존 `VITE_GEMINI_API_KEY`도 클라이언트에 포함하지 않습니다. 새 키는 반드시 `GEMINI_API_KEY`를 사용하세요.
 
-CoFolio는 다음 역량을 보여줄 수 있는 프로젝트입니다.
+## 검증
 
-- SaaS형 웹서비스 기획
-- React / Next.js 기반 프론트엔드 설계
-- TypeScript 기반 컴포넌트 구조화
-- 사용자 입력 폼과 결과 화면 설계
-- AI API 연동 구조 설계
-- Supabase 기반 인증 / DB 연동 확장 가능성
-- Vercel 배포 경험
-- 포트폴리오 / README / 발표자료로 전환 가능한 결과물 제작
+```powershell
+cd cofolio-app
+npm test
+npm run lint
+npm run build
+```
 
----
+`build`에 프런트·서버 TypeScript 검사가 포함됩니다. 검증 범위는 [QA 기록](docs/redesign-v2-qa.md)을 참고하세요. 새 활성 코드에 lint를 적용하며, 사용자의 기존 수정 사항이 있는 비활성 V1은 보존했습니다. `npm run lint:legacy`는 별도 검사입니다.
 
-## 향후 확장 아이디어
+## 빌드 결과 실행
 
-- GitHub 저장소 자동 분석
-- README 품질 점수화
-- Vercel 배포 링크 자동 연결
-- 프로젝트 제작 기록을 포트폴리오 설명으로 변환
-- 직무별 포트폴리오 템플릿 추천
-- AI 면접 답변 생성
-- Notion Export
-- GitHub Pages 배포 자동화
+```powershell
+cd cofolio-app
+npm run build
+npm start
+```
 
----
+[빌드 화면](http://127.0.0.1:4174)에서 정적 앱과 API가 함께 제공됩니다. 기본 바인딩은 로컬 컴퓨터의 `127.0.0.1`입니다.
 
-## 프로젝트 상태
+SQLite 데이터는 `cofolio-app/data/cofolio.sqlite`에 저장되고 Git에서 제외됩니다. 서버 재시작 후에도 유지됩니다. 운영 시 영구 디스크와 HTTPS 프록시가 필요하며 `DATABASE_PATH`, `APP_ORIGIN`, `COOKIE_SECURE=true`를 설정합니다. Node의 SQLite 실험 기능 경고는 런타임 안내입니다.
 
-현재 상태: **프론트엔드 디자인 프로토타입 / MVP 설계 단계**
+Vercel에서는 `api/[...path].ts`와 `api/auth/[action].ts`가 `server/cloud.ts`의 API를 실행합니다. 기존 V1 Supabase 테이블을 보존하고 별도 `cofolio_v2` schema에 저장합니다. 서버리스 환경에서는 SQLite를 사용하지 않습니다. 배포 명령·환경변수·인증 콜백은 [배포 문서](docs/deployment.md)를 참고하세요.
 
-본 프로젝트는 학습 및 포트폴리오 제작을 목적으로 진행 중입니다.
+## 구조와 문서
+
+```text
+cofolio-app/
+  src/v2/          화면, 상태, 도메인, 규칙 분석, 내보내기
+  api/             Vercel 함수 진입점
+  server/          로컬/클라우드 API, 인증, SQLite, GitHub import, AI 단계
+  supabase/        운영 DB migration, RLS와 transactional RPC
+  tests/           도메인/실제 HTTP/DB 통합 테스트
+  scripts/dev.ts   UI와 API 동시 실행
+  src/pages/       기존 V1 보존 (활성 진입점에서 사용하지 않음)
+docs/
+  redesign-v2-plan.md
+  redesign-v2-architecture.md
+  redesign-v2-qa.md
+  sql/supabase-v2-reference.sql
+```
+
+- [구현 판단과 계획](docs/redesign-v2-plan.md)
+- [데이터·API·AI 구조](docs/redesign-v2-architecture.md)
+- [실제 검증 결과와 후순위 범위](docs/redesign-v2-qa.md)
+
+로컬 SQLite 계정과 운영 Supabase 계정은 별개입니다. V1 및 로컬 자료의 자동 이전은 제공하지 않습니다. 실제 운영 migration은 `cofolio-app/supabase/migrations/`가 기준이며 `docs/sql/`은 초기 설계 참고안입니다.

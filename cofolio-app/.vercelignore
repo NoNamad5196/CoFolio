@@ -1,0 +1,6 @@
+/data/
+test-output/
+tests/
+.env*
+!.env.example
+*.log
