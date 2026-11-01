@@ -16,24 +16,24 @@ const STEPS = ['프로필', '프로젝트', '기술스택', '마무리']
 
 function StepBar({ current }: { current: number }) {
   return (
-    <div className="flex items-center gap-2 sm:gap-3">
+    <div className="builder-stepbar" aria-label="포트폴리오 작성 단계">
       {STEPS.map((s, i) => {
         const active = i === current
         const done = i < current
         return (
           <Fragment key={s}>
-            <div className="flex items-center gap-2 min-w-0">
+            <div className={cn('builder-step', active && 'is-active', done && 'is-done')}>
               <div className={cn(
-                'grid h-7 w-7 place-items-center rounded-full text-[11px] font-semibold border',
-                done ? 'bg-emerald-500/20 text-emerald-200 border-emerald-400/40' :
-                active ? 'bg-violet-500/25 text-violet-100 border-violet-400/50' :
-                'bg-white/5 text-slate-500 border-white/10'
+                'builder-step-dot',
+                done ? 'is-done' :
+                active ? 'is-active' :
+                'is-idle'
               )}>
                 {done ? <Icon name="check" size={12} /> : i + 1}
               </div>
-              <div className={cn('hidden sm:block text-[12.5px]', active ? 'text-white font-semibold' : done ? 'text-slate-300' : 'text-slate-500')}>{s}</div>
+              <div className="builder-step-label">{s}</div>
             </div>
-            {i < STEPS.length - 1 && <div className={cn('h-px flex-1 min-w-[16px]', done ? 'bg-emerald-400/40' : 'bg-white/8')} />}
+            {i < STEPS.length - 1 && <div className={cn('builder-step-line', done && 'is-done')} />}
           </Fragment>
         )
       })}
@@ -567,17 +567,20 @@ export default function BuilderPage() {
     <div className="relative min-h-screen">
       <div aria-hidden className="absolute inset-0 -z-10 bg-radial-violet opacity-60" />
 
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-ink-950/70 border-b border-white/5">
-        <div className="mx-auto flex h-14 w-full max-w-[1100px] items-center justify-between px-5">
+      <header className="app-topbar sticky top-0 z-40">
+        <div className="mx-auto flex h-16 w-full max-w-[1100px] items-center justify-between gap-3 px-5">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="grid h-8 w-8 place-items-center rounded-lg glass ring-grad"><Icon name="logo-c" size={18} /></div>
-            <span className="text-[15px] font-bold">Cofolio</span>
+            <div className="grid h-9 w-9 place-items-center rounded-xl glass ring-grad"><Icon name="logo-c" size={19} /></div>
+            <div>
+              <span className="block text-[15px] font-bold leading-tight">Cofolio</span>
+              <span className="hidden text-[11px] leading-tight text-slate-500 sm:block">Portfolio Builder</span>
+            </div>
           </Link>
           <div className="flex items-center gap-2">
-            <button onClick={fillExample} className="hidden sm:inline-flex items-center gap-1.5 text-[12px] text-slate-300 hover:text-white px-2.5 h-8 rounded-lg border border-white/10 bg-white/[0.03]">
+            <button onClick={fillExample} className="topbar-action hidden sm:inline-flex">
               <Icon name="sparkles" size={12} /> 예시 채우기
             </button>
-            <button onClick={reset} className="text-[12px] text-slate-500 hover:text-slate-300 px-2.5 h-8">초기화</button>
+            <button onClick={reset} className="topbar-reset">초기화</button>
           </div>
         </div>
       </header>

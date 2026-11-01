@@ -9,7 +9,7 @@ import type { BuilderState, PortfolioResult } from '../../types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const DISABLED_FORMATS = ['pdf', 'notion', 'vercel'] as const
+const DISABLED_FORMATS: string[] = []
 
 function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1)
@@ -57,7 +57,7 @@ function generateMarkdown(state: BuilderState, _result: PortfolioResult | null):
   return lines.join('\n')
 }
 
-function downloadHtml(state: BuilderState, portfolioName: string, theme: string): void {
+function buildPortfolioHtml(state: BuilderState, theme: string): string {
   const { profile, projects, stack, about } = state
   const stackEntries = (Object.entries(stack) as Array<[string, string[]]>).filter(([, v]) => v.length > 0)
   const isDark = theme !== 'light'
@@ -131,6 +131,11 @@ h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;
 </body>
 </html>`
 
+  return html
+}
+
+function downloadHtml(state: BuilderState, portfolioName: string, theme: string): void {
+  const html = buildPortfolioHtml(state, theme)
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -139,6 +144,49 @@ h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;
   document.body.appendChild(a)
   a.click()
   setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url) }, 100)
+}
+
+function openPdfPrint(state: BuilderState, theme: string): void {
+  const html = buildPortfolioHtml(state, theme)
+  const printHtml = html.replace(
+    '</style>',
+    `@page{size:A4;margin:16mm}
+@media print{
+  body{padding:0;background:#fff!important;color:#111827!important}
+  .w{max-width:none}
+  .pc{break-inside:avoid;page-break-inside:avoid}
+  a{color:#111827;text-decoration:none}
+}
+</style>`,
+  )
+  const frame = document.createElement('iframe')
+  frame.style.position = 'fixed'
+  frame.style.right = '0'
+  frame.style.bottom = '0'
+  frame.style.width = '0'
+  frame.style.height = '0'
+  frame.style.border = '0'
+  frame.setAttribute('aria-hidden', 'true')
+  document.body.appendChild(frame)
+
+  const win = frame.contentWindow
+  const doc = win?.document
+  if (!win || !doc) {
+    document.body.removeChild(frame)
+    throw new Error('print frame unavailable')
+  }
+
+  doc.open()
+  doc.write(printHtml)
+  doc.close()
+
+  window.setTimeout(() => {
+    win.focus()
+    win.print()
+    window.setTimeout(() => {
+      if (frame.parentNode) frame.parentNode.removeChild(frame)
+    }, 1000)
+  }, 250)
 }
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -186,7 +234,7 @@ interface Props {
 export function ExportModal({ isOpen, onClose, portfolioName = '포트폴리오' }: Props) {
   const { state, result } = useBuilder()
   const [format, setFormat] = useState('html')
-  const [theme, setTheme] = useState('dark')
+  const [theme, setTheme] = useState('light')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState<{ title: string; sub: string } | null>(null)
   const [exportError, setExportError] = useState<string | null>(null)
@@ -206,7 +254,7 @@ export function ExportModal({ isOpen, onClose, portfolioName = '포트폴리오'
 
   if (!isOpen) return null
 
-  const isDisabled = DISABLED_FORMATS.includes(format as typeof DISABLED_FORMATS[number])
+  const isDisabled = DISABLED_FORMATS.includes(format)
 
   const handleExport = async () => {
     if (isDisabled || busy) return
@@ -221,9 +269,18 @@ export function ExportModal({ isOpen, onClose, portfolioName = '포트폴리오'
       } else if (format === 'html') {
         downloadHtml(state, portfolioName, theme)
         setDone({ title: 'HTML 다운로드를 시작했어요', sub: `${portfolioName}-${theme}.html` })
+      } else if (format === 'pdf') {
+        openPdfPrint(state, theme)
+        setDone({ title: 'PDF 저장 창을 열었어요', sub: '인쇄 대화상자에서 PDF로 저장을 선택하세요.' })
       }
     } catch {
-      setExportError('클립보드 복사에 실패했습니다. 브라우저 권한을 확인하거나 직접 복사해주세요.')
+      setExportError(
+        format === 'pdf'
+          ? 'PDF 저장 창을 여는 데 실패했습니다. 브라우저 팝업/인쇄 권한을 확인해주세요.'
+          : format === 'md'
+          ? '클립보드 복사에 실패했습니다. 브라우저 권한을 확인하거나 직접 복사해주세요.'
+          : '파일 다운로드를 시작하지 못했습니다. 브라우저 다운로드 권한을 확인해주세요.',
+      )
     } finally {
       setBusy(false)
     }
@@ -235,6 +292,7 @@ export function ExportModal({ isOpen, onClose, portfolioName = '포트폴리오'
   const actionLabel = () => {
     if (isDisabled) return '준비 중'
     if (format === 'md') return 'Markdown 복사'
+    if (format === 'pdf') return 'PDF 저장'
     return '다운로드'
   }
 
@@ -272,7 +330,7 @@ export function ExportModal({ isOpen, onClose, portfolioName = '포트폴리오'
             {/* Format grid */}
             <div>
               <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400 mb-2.5">형식</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 {EXPORT_FORMATS.map((f) => {
                   const sel = format === f.id
                   const dis = DISABLED_FORMATS.includes(f.id as typeof DISABLED_FORMATS[number])

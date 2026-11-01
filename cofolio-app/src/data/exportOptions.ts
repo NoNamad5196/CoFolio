@@ -29,16 +29,6 @@ export const EXPORT_FORMATS: ExportFormat[] = [
     title: 'Markdown',
     desc: 'GitHub 프로필 README에 바로 붙여넣기',
   },
-  {
-    id: 'notion',
-    title: 'Notion 정리',
-    desc: 'Notion에 바로 가져갈 수 있게 블록 단위로 정리',
-  },
-  {
-    id: 'vercel',
-    title: 'Vercel 배포 준비',
-    desc: '한 번에 배포할 수 있는 프로젝트 패키지 생성',
-  },
 ]
 
 export const EXPORT_THEMES: ExportTheme[] = [

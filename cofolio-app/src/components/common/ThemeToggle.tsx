@@ -9,7 +9,7 @@ export function ThemeToggle() {
       className="theme-fab"
       type="button"
       aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
-      title={isDark ? '라이트 모드' : '다크 모드'}
+      title={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
     >
       {isDark ? (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

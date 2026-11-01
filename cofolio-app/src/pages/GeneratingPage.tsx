@@ -61,7 +61,7 @@ export default function GeneratingPage() {
   const pct = Math.round(progress * 100)
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-5 overflow-hidden">
+    <div className="relative min-h-screen flex items-center justify-center px-5 py-10 overflow-x-hidden">
       <div aria-hidden className="absolute inset-0 -z-10 bg-radial-violet" />
       <div aria-hidden className="absolute inset-0 -z-10 bg-grid opacity-30" />
       <div aria-hidden className="absolute -top-32 left-1/2 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-violet-600/20 blur-[120px]" />
@@ -126,7 +126,7 @@ export default function GeneratingPage() {
         </div>
 
         {/* Terminal */}
-        <div className="mt-5 rounded-xl border border-white/8 bg-ink-950/80 p-3 font-mono text-[11.5px] leading-relaxed text-slate-400 nosb max-h-[120px] overflow-hidden">
+        <div className="generation-terminal mt-5">
           <div><span className="text-violet-300">→</span> cofolio analyze --input ./portfolio.json</div>
           <div><span className="text-cyan-300">✓</span> parsed {Math.floor(progress * 8) + 2} sections</div>
           <div><span className="text-cyan-300">✓</span> classified tech stack into 5 groups</div>

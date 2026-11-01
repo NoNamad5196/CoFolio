@@ -1,13 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
-const THEME_KEY = 'cofolio.theme'
+const THEME_KEY = 'cofolio.theme.v2'
+const DEFAULT_THEME = 'light'
 
 function loadTheme(): 'dark' | 'light' {
   try {
     const v = localStorage.getItem(THEME_KEY)
     if (v === 'light' || v === 'dark') return v
   } catch {}
-  return 'dark'
+  return DEFAULT_THEME
 }
 
 interface ThemeContextValue {
@@ -17,7 +18,7 @@ interface ThemeContextValue {
 }
 
 const ThemeCtx = createContext<ThemeContextValue>({
-  theme: 'dark',
+  theme: DEFAULT_THEME,
   toggle: () => {},
   set: () => {},
 })
